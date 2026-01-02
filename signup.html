@@ -86,75 +86,56 @@ body {
   <button onclick="signup()">Créer un compte</button>
   <p>Déjà membre ? <a href="login.html">Connecte-toi ici</a></p>
 </div>
-
-<script> src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"</script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script>
-// === Config Supabase ===
-const SUPABASE_URL = "https://cdfezghlkilhuhpalihk.supabase.co"; // ranplase ak URL ou
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmV6Z2hsa2lsaHVocGFsaWhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2MjQ5MjcsImV4cCI6MjA3ODIwMDkyN30.VlOS0qwq3lWk4kflH8ILoYVALS68y--8RwsGSMFubH4";          // ranplase ak PUBLIC ANON KEY ou
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/* === CONFIG SUPABASE === */
+const SUPABASE_URL = "https://TON_URL.supabase.co";
+const SUPABASE_KEY = "TA_PUBLIC_ANON_KEY";
 
-// --- Hash modpas SHA-256 ---
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
+/* Librairie */
+const supabaseLib = supabase;
+
+/* Client */
+const supabaseClient = supabaseLib.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 async function signup() {
   const fullname = document.getElementById('fullname').value.trim();
-  const user = document.getElementById('username').value.trim();
+  const username = document.getElementById('username').value.trim();
   const email = document.getElementById('email').value.trim();
-  const pass = document.getElementById('password').value.trim();
+  const password = document.getElementById('password').value.trim();
   const confirm = document.getElementById('confirm').value.trim();
 
-  if (!fullname || !user || !email || !pass || !confirm) {
-    document.getElementById('errorMsg').innerText = "Remplis tout chan yo svp.";
-    document.getElementById('message').innerText = "";
-    return;
-  }
-  if (pass !== confirm) {
-    document.getElementById('errorMsg').innerText = "Mot de passe yo pa menm.";
-    document.getElementById('message').innerText = "";
+  if (!fullname || !username || !email || !password || !confirm) {
+    alert("Remplis tout chan yo svp.");
     return;
   }
 
-  // Hash modpas avan insert
-  const hashedPass = await hashPassword(pass);
-
-  // Verify si email deja egziste
-  const { data: existing, error: checkError } = await supabase.from("clients").select("*").eq("email", email);
-  if(checkError){
-    document.getElementById('errorMsg').innerText = "Erreur: " + checkError.message;
-    return;
-  }
-  if(existing.length > 0){
-    document.getElementById('errorMsg').innerText = "Email deja itilize, tanpri itilize yon lot.";
+  if (password !== confirm) {
+    alert("Mot de passe yo pa menm.");
     return;
   }
 
-  // Insert nan Supabase
-  const { data, error } = await supabase.from("clients").insert([{
-    nom: fullname,
-    username: user,
-    email: email,
-    password: hashedPass
-  }]);
+  /* INSERT CLIENT */
+  const { error } = await supabaseClient
+    .from("clients")
+    .insert([{
+      nom: fullname,
+      username: username,
+      email: email,
+      password: password
+    }]);
 
-  if(error){
-    document.getElementById('errorMsg').innerText = "Erreur: " + error.message;
-    document.getElementById('message').innerText = "";
+  if (error) {
+    alert("Erreur : " + error.message);
     return;
   }
 
-  // Success: redirection otomatik nan login
-  document.getElementById('message').innerText = "Enregistrement réussi ! Redirection...";
-  document.getElementById('errorMsg').innerText = "";
-  setTimeout(()=>{
-    window.location.href = "login.html";
-  }, 1500);
+  /* SUCCESS → LOGIN */
+  alert("Compte créé avec succès !");
+  window.location.href = "login.html";
 }
 </script>
 
