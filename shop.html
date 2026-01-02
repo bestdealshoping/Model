@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop - Rebel Mode</title>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  background-color: #000;
+  color: #fff;
+}
+.header {
+  background: #111;
+  color: gold;
+  padding: 20px;
+  text-align: center;
+  font-size: 24px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 10px rgba(255,215,0,0.3);
+}
+.welcome {
+  font-size: 18px;
+  margin-top: 5px;
+  color: #fff;
+}
+.container {
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.product-card {
+  background: #111;
+  border-radius: 10px;
+  margin: 10px;
+  padding: 15px;
+  width: 200px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(255,215,0,0.2);
+}
+.product-card h3 { color: gold; margin-bottom: 10px; }
+.product-card p { margin-bottom: 10px; font-size: 14px; }
+.product-card button {
+  background: gold;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.product-card button:hover { background: #e6c200; }
+.logout-btn {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background: gold;
+  color: #000;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.logout-btn:hover { background: #e6c200; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  Rebel Mode Shop
+  <div class="welcome" id="welcomeMsg"></div>
+</div>
+
+<button class="logout-btn" onclick="logout()">Se déconnecter</button>
+
+<div class="container" id="shopContainer">
+  <!-- Products will be loaded here -->
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// === Vérification login ===
+const client = JSON.parse(localStorage.getItem("clientLoggedIn"));
+if(!client){
+  window.location.href = "login.html";
+} else {
+  document.getElementById("welcomeMsg").innerText = "Bienvenue, " + client.nom + " !";
+}
+
+// === Config Supabase ===
+const SUPABASE_URL = "https://cdfezghlkilhuhpalihk.supabase.co"; // Ranplase ak URL ou
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmV6Z2hsa2lsaHVocGFsaWhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2MjQ5MjcsImV4cCI6MjA3ODIwMDkyN30.VlOS0qwq3lWk4kflH8ILoYVALS68y--8RwsGSMFubH4";          // Ranplase ak PUBLIC ANON KEY ou
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Charger produits
+async function loadProducts(){
+  const { data, error } = await supabase.from("produits").select("*").order("id",{ascending:true});
+  const container = document.getElementById("shopContainer");
+  if(error){ container.innerHTML = "Erreur lors du chargement."; console.error(error); return; }
+  if(data.length===0){ container.innerHTML = "Aucun produit disponible."; return; }
+
+  data.forEach(prod=>{
+    const div = document.createElement("div");
+    div.className = "product-card";
+    div.innerHTML = `
+      <h3>${prod.nom}</h3>
+      <p>Prix: ${prod.prix} Gdes</p>
+      <button onclick="buyProduct('${prod.nom}', ${prod.prix})">Acheter</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// Simulate buy
+function buyProduct(name, price){
+  alert("Merci " + client.nom + " ! Vous avez acheté: " + name + " pour " + price + " Gdes.");
+}
+
+function logout(){
+  localStorage.removeItem("clientLoggedIn");
+  window.location.href = "login.html";
+}
+
+loadProducts();
+</script>
+
+</body>
+</html>

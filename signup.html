@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inscription - Rebel Mode</title>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  background-color: #000;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.signup-container {
+  background-color: #111;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.signup-container h2 {
+  color: gold;
+  margin-bottom: 20px;
+  font-size: 24px;
+  text-transform: uppercase;
+}
+
+.signup-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 8px;
+  background: #222;
+  color: #fff;
+  font-size: 14px;
+}
+
+.signup-container input:focus { outline: 2px solid gold; }
+
+.signup-container button {
+  width: 100%;
+  padding: 12px;
+  background: gold;
+  border: none;
+  border-radius: 8px;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.signup-container button:hover { background: #e6c200; }
+
+.signup-container p { margin-top: 15px; font-size: 14px; }
+
+.signup-container a { color: gold; text-decoration: none; font-weight: bold; }
+
+.signup-container a:hover { text-decoration: underline; }
+
+.message { color: #00ff00; margin-bottom: 10px; }
+
+.error { color: red; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<div class="signup-container">
+  <h2>Inscription</h2>
+  <div class="message" id="message"></div>
+  <div class="error" id="errorMsg"></div>
+  <input type="text" id="fullname" placeholder="Nom complet">
+  <input type="text" id="username" placeholder="Nom d'utilisateur">
+  <input type="email" id="email" placeholder="Adresse e-mail">
+  <input type="password" id="password" placeholder="Mot de passe">
+  <input type="password" id="confirm" placeholder="Confirme ton mot de passe">
+  <button onclick="signup()">Créer un compte</button>
+  <p>Déjà membre ? <a href="login.html">Connecte-toi ici</a></p>
+</div>
+
+<script> src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"</script>
+<script>
+// === Config Supabase ===
+const SUPABASE_URL = "https://cdfezghlkilhuhpalihk.supabase.co"; // ranplase ak URL ou
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmV6Z2hsa2lsaHVocGFsaWhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2MjQ5MjcsImV4cCI6MjA3ODIwMDkyN30.VlOS0qwq3lWk4kflH8ILoYVALS68y--8RwsGSMFubH4";          // ranplase ak PUBLIC ANON KEY ou
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// --- Hash modpas SHA-256 ---
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function signup() {
+  const fullname = document.getElementById('fullname').value.trim();
+  const user = document.getElementById('username').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const pass = document.getElementById('password').value.trim();
+  const confirm = document.getElementById('confirm').value.trim();
+
+  if (!fullname || !user || !email || !pass || !confirm) {
+    document.getElementById('errorMsg').innerText = "Remplis tout chan yo svp.";
+    document.getElementById('message').innerText = "";
+    return;
+  }
+  if (pass !== confirm) {
+    document.getElementById('errorMsg').innerText = "Mot de passe yo pa menm.";
+    document.getElementById('message').innerText = "";
+    return;
+  }
+
+  // Hash modpas avan insert
+  const hashedPass = await hashPassword(pass);
+
+  // Verify si email deja egziste
+  const { data: existing, error: checkError } = await supabase.from("clients").select("*").eq("email", email);
+  if(checkError){
+    document.getElementById('errorMsg').innerText = "Erreur: " + checkError.message;
+    return;
+  }
+  if(existing.length > 0){
+    document.getElementById('errorMsg').innerText = "Email deja itilize, tanpri itilize yon lot.";
+    return;
+  }
+
+  // Insert nan Supabase
+  const { data, error } = await supabase.from("clients").insert([{
+    nom: fullname,
+    username: user,
+    email: email,
+    password: hashedPass
+  }]);
+
+  if(error){
+    document.getElementById('errorMsg').innerText = "Erreur: " + error.message;
+    document.getElementById('message').innerText = "";
+    return;
+  }
+
+  // Success: redirection otomatik nan login
+  document.getElementById('message').innerText = "Enregistrement réussi ! Redirection...";
+  document.getElementById('errorMsg').innerText = "";
+  setTimeout(()=>{
+    window.location.href = "login.html";
+  }, 1500);
+}
+</script>
+
+</body>
+</html>
